@@ -8,9 +8,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'django-insecure-cg6*%6d51ef8f#4!r3*$vmxm4)abgjw8mo!4y-q*uq1!4$-89$'
 
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1:9090', 'localhosh:9090', 'https://kirfoodgram.servebeer.com', 'kirfoodgram.servebeer.com']
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -58,7 +58,7 @@ DJOSER = {
     'LOGIN_FIELD': 'email',
 }
 
-CSRF_TRUSTED_ORIGINS = ['kirfoodgram.servebeer.com']
+CSRF_TRUSTED_ORIGINS = ['https://kirfoodgram.servebeer.com', 'kirfoodgram.servebeer.com']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
