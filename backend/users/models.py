@@ -1,8 +1,7 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator, RegexValidator
-
+from django.db import models
 
 MAX_LEN_EMAIL = 254
 MAX_LEN_NAME = 149

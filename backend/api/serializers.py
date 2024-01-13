@@ -1,22 +1,16 @@
 import sys
 
 from django.db import transaction
-from rest_framework import serializers, status
 from drf_extra_fields.fields import Base64ImageField
+from rest_framework import serializers, status
 
-from recipes.models import (
-    AmountIngredient,
-    Favorite,
-    Ingredient,
-    Recipe,
-    ShoppingCart,
-    Tag,
-)
+from recipes.models import (AmountIngredient, Favorite, Ingredient, Recipe,
+                            ShoppingCart, Tag)
 from users.models import Subscription, User
-
 
 MAX_AMOUNT = sys.maxsize
 MIN_AMOUNT = 1
+
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model."""

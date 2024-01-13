@@ -6,34 +6,21 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import (
-    SAFE_METHODS,
-    IsAuthenticated,
-    IsAuthenticatedOrReadOnly,
-)
+from rest_framework.permissions import (SAFE_METHODS, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 
 from api.filters import IngredientFilter, RecipeFilter
 from api.paginations import CustomPagination
 from api.permissions import AuthorOrReadOnly
-from api.serializers import (
-    FavoriteCreateDeleteSerializer,
-    IngredientSerializer,
-    RecipeCreateSerializer,
-    RecipeReadSerializer,
-    ShoppingCartCreateDeleteSerializer,
-    SubscribeCreateSerializer,
-    SubscribeSerializer,
-    TagSerializer,
-)
-from recipes.models import (
-    AmountIngredient,
-    Favorite,
-    Ingredient,
-    Recipe,
-    ShoppingCart,
-    Tag,
-)
+from api.serializers import (FavoriteCreateDeleteSerializer,
+                             IngredientSerializer, RecipeCreateSerializer,
+                             RecipeReadSerializer,
+                             ShoppingCartCreateDeleteSerializer,
+                             SubscribeCreateSerializer, SubscribeSerializer,
+                             TagSerializer)
+from recipes.models import (AmountIngredient, Favorite, Ingredient, Recipe,
+                            ShoppingCart, Tag)
 from users.models import Subscription, User
 
 

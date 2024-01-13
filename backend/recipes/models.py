@@ -1,12 +1,11 @@
 import sys
 
+from colorfield.fields import ColorField
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.functions import Length
-from django.core.validators import MaxValueValidator, MinValueValidator
-from colorfield.fields import ColorField
 
 from users.models import User
-
 
 MAX_LEN_TITLE = 200
 MAX_AMOUNT = sys.maxsize
