@@ -41,7 +41,7 @@ services:
       - 9090:80
     volumes:
       - static_volume:/usr/share/nginx/html/
-      - media_volume:/var/html/media/
+      - media_volume:/app/media:ro
     depends_on:
       - backend
       - frontend
