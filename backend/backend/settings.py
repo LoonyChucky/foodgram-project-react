@@ -58,7 +58,7 @@ DJOSER = {
     'LOGIN_FIELD': 'email',
 }
 
-CSRF_TRUSTED_ORIGINS = ['https://kirfoodgram.servebeer.com/']
+CSRF_TRUSTED_ORIGINS = ['kirfoodgram.servebeer.com']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
