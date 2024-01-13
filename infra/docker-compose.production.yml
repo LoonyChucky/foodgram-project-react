@@ -33,7 +33,7 @@ services:
     depends_on:
       - db
       - backend
-  
+
   gateway:
     container_name: foodgram_gateway
     image: lartsevka/foodgram_gateway:latest
