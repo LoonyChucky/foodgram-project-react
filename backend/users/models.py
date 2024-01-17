@@ -3,69 +3,65 @@ from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator, RegexValidator
 from django.db import models
 
-MAX_LEN_EMAIL = 254
-MAX_LEN_NAME = 149
-REQUIRED_FIELDS_CONST = ('username', 'password', 'first_name', 'last_name')
-USERNAME_FIELD_CONST = 'email'
-
 
 class User(AbstractUser):
-    USERNAME_FIELD = USERNAME_FIELD_CONST
-    REQUIRED_FIELDS = REQUIRED_FIELDS_CONST
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ('username',
+                       'password',
+                       'first_name',
+                       'last_name')
 
     username = models.CharField(
-        verbose_name='Username',
-        max_length=MAX_LEN_NAME,
+        'Username',
+        max_length=149,
         unique=True,
-        help_text='Enter username',
-        validators=[
-            RegexValidator(
-                regex=r'^[a-zA-Z0-9]+([_.-]?[a-zA-Z0-9])*$',
-                message=('Only numbers, latin letters, '
-                         'underscore, dash, dote. '
-                         'Marks should not be at beginning.')
-            )]
+        validators=[RegexValidator(
+            regex=r'^[a-zA-Z0-9]+([_.-]?[a-zA-Z0-9])*$')],
     )
+
     email = models.EmailField(
-        verbose_name='User email',
-        max_length=MAX_LEN_EMAIL,
+        'User email',
+        max_length=254,
         unique=True,
+        blank=False,
         validators=[EmailValidator],
-        help_text='Enter user email'
     )
+
     first_name = models.CharField(
-        verbose_name='User first name',
-        max_length=MAX_LEN_NAME,
+        'User first name',
+        max_length=149,
         blank=False,
-        help_text='Enter user first name'
     )
+
     last_name = models.CharField(
-        verbose_name='User last name',
-        max_length=MAX_LEN_NAME,
+        'User last name',
+        max_length=149,
         blank=False,
-        help_text='Enter user last name'
     )
 
     class Meta:
+        ordering = ('username',)
         verbose_name = 'User'
         verbose_name_plural = 'Users'
-        ordering = ('username',)
 
     def __str__(self) -> str:
         return f'{self.username}: {self.email}'
 
 
 class Subscription(models.Model):
+
     user = models.ForeignKey(
-        to=User,
-        related_name='followed_users',
+        User,
         on_delete=models.CASCADE,
+        related_name='followed_users',
         verbose_name='Follower',
     )
+
     author = models.ForeignKey(
-        to=User,
-        related_name='author',
+        User,
         on_delete=models.CASCADE,
+        related_name='author',
         verbose_name='Author',
     )
 
@@ -76,7 +72,7 @@ class Subscription(models.Model):
             models.UniqueConstraint(
                 fields=('user', 'author'),
                 name=(
-                    '\n%(app_label)s_%(class)s user cannot subscribe '
+                    'cannot subscribe '
                     'to same author twice\n'),
             ),
         )

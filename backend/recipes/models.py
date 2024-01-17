@@ -1,40 +1,31 @@
-import sys
-
 from colorfield.fields import ColorField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models.functions import Length
 
 from users.models import User
 
-MAX_LEN_TITLE = 200
-MAX_AMOUNT = sys.maxsize
-MIN_AMOUNT = 1
-MAX_HEX = 7
-
-models.CharField.register_lookup(Length)
-
 
 class Tag(models.Model):
-    """Tag model."""
+
     name = models.CharField(
-        verbose_name='Tag name',
-        max_length=MAX_LEN_TITLE,
+        'Tag',
+        max_length=200,
         unique=True,
-        help_text='Enter tag name'
+        blank=False,
     )
+
     slug = models.SlugField(
-        verbose_name='Tag slug',
-        max_length=MAX_LEN_TITLE,
+        'Slug',
+        max_length=200,
         unique=True,
-        help_text='Enter tag slug'
+        blank=False,
     )
+
     color = ColorField(
-        verbose_name='HEX-code for color',
-        max_length=MAX_HEX,
-        default='#00ff7f',
+        'Tag color',
+        max_length=7,
         unique=True,
-        help_text='Choose color for tag'
+        blank=False,
     )
 
     class Meta:
@@ -47,22 +38,23 @@ class Tag(models.Model):
 
 
 class Ingredient(models.Model):
-    """Ingredient model."""
+
     name = models.CharField(
-        verbose_name='Ingredient name',
-        max_length=MAX_LEN_TITLE,
-        help_text='Enter ingredient name'
+        'Ingredient',
+        max_length=200,
+        blank=False,
     )
+
     measurement_unit = models.CharField(
-        verbose_name='Measurement unit',
-        max_length=MAX_LEN_TITLE,
-        help_text='Enter measurement unit'
+        'Measurement Unit',
+        max_length=200,
+        blank=False,
     )
 
     class Meta:
+        ordering = ('name',)
         verbose_name = 'Ingredient'
         verbose_name_plural = 'Ingredients'
-        ordering = ('name',)
         constraints = [
             models.UniqueConstraint(
                 fields=('name', 'measurement_unit'),
@@ -75,159 +67,166 @@ class Ingredient(models.Model):
 
 
 class Recipe(models.Model):
-    """Recipe model."""
+
     name = models.CharField(
-        verbose_name='Recipe name',
-        max_length=MAX_LEN_TITLE,
-        help_text='Enter recipe name'
+        'Recipe',
+        max_length=200,
+        blank=False
     )
+
     text = models.TextField(
-        verbose_name='Recipe text',
-        help_text='Enter recipe text'
+        'Recipe discription',
+        blank=False,
     )
+
     image = models.ImageField(
-        verbose_name='Recipe image',
+        'Picture',
         upload_to='recipes/images/',
-        help_text='Upload recipe image'
+        blank=False,
     )
-    pub_date = models.DateTimeField(
-        verbose_name='Publication date',
-        auto_now_add=True,
-        editable=False,
+
+    tags = models.ManyToManyField(
+        Tag,
+        verbose_name='Tags',
+        related_name='recipes',
+        blank=False,
     )
+
+    ingredients = models.ManyToManyField(
+        Ingredient,
+        verbose_name='Ingredients',
+        related_name='recipes',
+        through='IngredientAmount',
+    )
+
     author = models.ForeignKey(
-        to=User,
+        User,
         on_delete=models.CASCADE,
         related_name='recipes',
         verbose_name='Recipe author',
-        help_text='Choose recipe author'
     )
+
     cooking_time = models.PositiveSmallIntegerField(
-        verbose_name='Cooking time',
+        'Cooking time',
         validators=[
-            MinValueValidator(limit_value=MIN_AMOUNT,
-                              message=f'At least {MIN_AMOUNT} minute!'),
-            MaxValueValidator(limit_value=MAX_AMOUNT,
-                              message=f'No more than {MAX_AMOUNT} minutes!'),
+            MinValueValidator(limit_value=1,
+                              message='At least 1 minute!'),
+            MaxValueValidator(limit_value=10080,
+                              message='No more than 1 week!'),
         ],
-        help_text='Enter cooking time in minutes'
     )
-    tags = models.ManyToManyField(
-        to=Tag,
-        verbose_name='Tags',
-        related_name='recipes',
-        blank=True,
-        help_text='Choose tags for recipe'
-    )
-    ingredients = models.ManyToManyField(
-        to=Ingredient,
-        verbose_name='Ingredients',
-        related_name='recipes',
-        through='AmountIngredient',
-        help_text='Choose ingredients and amount'
+
+    pub_date = models.DateTimeField(
+        'Publication date',
+        auto_now_add=True,
+        editable=False,
     )
 
     class Meta:
+        ordering = ('-pub_date',)
         verbose_name = 'Recipe'
         verbose_name_plural = 'Recipes'
-        ordering = ('-pub_date',)
-        constraints = (
-            models.CheckConstraint(
-                check=models.Q(name__length__gt=0),
-                name='\n%(app_label)s_%(class)s_name is empty\n',
-            ),
-        )
 
     def __str__(self) -> str:
-        return f'{self.name}. Автор: {self.author.username}'
+        return f'{self.name}'
 
 
-class AmountIngredient(models.Model):
-    """Ingredient amount model."""
+class IngredientAmount(models.Model):
+
     recipe = models.ForeignKey(
-        to=Recipe,
+        Recipe,
         related_name='recipe_ingredient',
         on_delete=models.CASCADE,
         verbose_name='Recipe',
-        help_text='Choose recipe for ingredient'
     )
+
     ingredient = models.ForeignKey(
-        to=Ingredient,
+        Ingredient,
         on_delete=models.CASCADE,
         verbose_name='Ingredient',
-        help_text='Choose ingredient for recipe'
     )
+
     amount = models.PositiveSmallIntegerField(
-        verbose_name='Amount of ingredient',
-        help_text='Enter amount of ingredient',
+        'Ingredient amount',
         validators=(
-            MinValueValidator(
-                limit_value=MIN_AMOUNT,
-                message=f'At least {MIN_AMOUNT}!'),
-            MaxValueValidator(
-                limit_value=MAX_AMOUNT,
-                message=f'No more than {MAX_AMOUNT}!')),
+            MinValueValidator(1, 'Minimum 1 unit'),
+            MaxValueValidator(10000, 'Max 10 000 units'),
+        ),
     )
 
     class Meta:
-        verbose_name = 'Ingredient from recipe'
-        verbose_name_plural = 'Ingredients from recipe'
         ordering = ('recipe',)
+        verbose_name = 'Ingredient in recipe'
+        verbose_name_plural = 'Ingredients in recipe'
 
     def __str__(self):
-        return (
-            f'{self.ingredient.name} ({self.ingredient.measurement_unit}) - '
-            f'{self.amount} '
-        )
+        return (f'{self.ingredient.name} {self.amount} '
+                f'{self.ingredient.measurement_unit}')
 
 
-class UserRecipeRelation(models.Model):
-    """Model for user-recipe relations."""
+class Favorite(models.Model):
+
     user = models.ForeignKey(
-        to=User,
+        User,
         verbose_name='User',
         on_delete=models.CASCADE,
         related_name='%(app_label)s_%(class)s_related',
     )
+
     recipe = models.ForeignKey(
-        to=Recipe,
+        Recipe,
+        verbose_name='Recipe',
+        on_delete=models.CASCADE,
+        related_name='%(app_label)s_%(class)s_related',
+    )
+
+    date_added = models.DateTimeField(
+        'Add date',
+        auto_now_add=True,
+        editable=False,
+    )
+
+    class Meta:
+        verbose_name = 'Favorite recipe'
+        verbose_name_plural = 'Favorite recipes'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'recipe'),
+                name=('recipe already'
+                      ' in user\'s favorites'),
+            ),
+        )
+
+    def __str__(self):
+        return f' {self.recipe} to Favorites'
+
+
+class ShoppingCart(models.Model):
+
+    user = models.ForeignKey(
+        User,
+        verbose_name='User',
+        on_delete=models.CASCADE,
+        related_name='%(app_label)s_%(class)s_related',
+    )
+
+    recipe = models.ForeignKey(
+        Recipe,
         verbose_name='Recipe',
         on_delete=models.CASCADE,
         related_name='%(app_label)s_%(class)s_related',
     )
 
     class Meta:
-        abstract = True
+        verbose_name = 'Recipe in shopping cart'
+        verbose_name_plural = 'Recipes in shopping cart'
         constraints = (
             models.UniqueConstraint(
                 fields=('user', 'recipe'),
-                name=('\n%(app_label)s_%(class)s recipe already'
-                      ' linked to this user\n'),
+                name=('recipe already'
+                      ' in user\'s cart'),
             ),
         )
 
-
-class Favorite(UserRecipeRelation):
-    """Model for favorite recipes."""
-    date_added = models.DateTimeField(
-        verbose_name='Date of addition',
-        auto_now_add=True,
-        editable=False,
-    )
-
-    class Meta(UserRecipeRelation.Meta):
-        verbose_name = 'Favorite recipe'
-        verbose_name_plural = 'Favorite recipes'
-
     def __str__(self):
-        return f'{self.user} added {self.recipe} to Favorites'
-
-
-class ShoppingCart(UserRecipeRelation):
-    """Model for shopping cart."""
-    class Meta(UserRecipeRelation.Meta):
-        verbose_name = 'Recipe in shopping cart'
-        verbose_name_plural = 'Recipes in shopping cart'
-
-    def __str__(self):
-        return f'{self.recipe} is in {self.user} shopping cart'
+        return f'{self.recipe} added shopping cart'
