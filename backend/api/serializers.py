@@ -5,6 +5,9 @@ from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
                             ShoppingCart, Tag)
 from users.models import Subscription, User
 
+MIN_VALUE = 1
+MAX_VALUE = 32000
+
 
 class TagSerializer(serializers.ModelSerializer):
 
@@ -37,8 +40,8 @@ class AddIngredientAmountSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all(), )
     amount = serializers.IntegerField(
-        min_value=1,
-        max_value=10000)
+        min_value=MIN_VALUE,
+        max_value=MAX_VALUE)
 
     class Meta:
         model = IngredientAmount
@@ -60,7 +63,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
             'is_subscribed')
 
     def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
+        user = self.context['request'].user
         if user.is_authenticated:
             return user.followed_users.filter(author=obj).exists()
         return False
@@ -88,9 +91,9 @@ class SubscriberSerializer(CustomUserSerializer):
 
     def validate(self, data):
         author = self.instance
-        user = self.context.get('request').user
+        user = self.context['request'].user
 
-        if Subscription.objects.filter(author=author, user=user).exists():
+        if user.followed_users.filter(author=author).exists():
             raise serializers.ValidationError(
                 'You are already subscribed to this user!')
 
@@ -121,11 +124,10 @@ class CreateSubscribtionSerializer(serializers.ModelSerializer):
         fields = ('user', 'author')
 
     def validate(self, data):
-        user = data.get('user').id
-        author = data.get('author').id
+        user = data['user']
+        author = data['author']
 
-        if Subscription.objects.filter(
-                author=author, user=user).exists():
+        if user.followed_users.filter(author=author.id).exists():
             raise serializers.ValidationError(
                 detail='already subscribed',
                 code=status.HTTP_400_BAD_REQUEST)
@@ -159,10 +161,10 @@ class FavoriteSerializer(serializers.ModelSerializer):
         fields = ('user', 'recipe')
 
     def validate(self, data):
-        user = data.get('user').id
-        recipe = data.get('recipe').id
-        if self.Meta.model.objects.filter(user=user,
-                                          recipe=recipe).exists():
+        user = data['user']
+        recipe = data['recipe']
+
+        if user.recipes_favorite_related.filter(recipe=recipe.id).exists():
             raise serializers.ValidationError('Recipe already in favorite')
         return data
 
@@ -179,10 +181,10 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         fields = ('user', 'recipe')
 
     def validate(self, data):
-        user = data.get('user').id
-        recipe = data.get('recipe').id
-        if self.Meta.model.objects.filter(user=user,
-                                          recipe=recipe).exists():
+        user = data['user']
+        recipe = data['recipe']
+
+        if user.recipes_shoppingcart_related.filter(recipe=recipe.id).exists():
             raise serializers.ValidationError('Recipe already in cart')
         return data
 
@@ -217,14 +219,14 @@ class RecipeListSerializer(serializers.ModelSerializer):
                   'is_in_shopping_cart')
 
     def get_is_favorited(self, obj):
-        user = self.context.get('request').user
+        user = self.context['request'].user
         if user.is_authenticated:
             return getattr(user, 'recipes_favorite_related'
                            ).filter(recipe=obj).exists()
         return False
 
     def get_is_in_shopping_cart(self, obj):
-        user = self.context.get('request').user
+        user = self.context['request'].user
         if user.is_authenticated:
             return getattr(user, 'recipes_shoppingcart_related'
                            ).filter(recipe=obj).exists()
@@ -236,7 +238,11 @@ class RecipeSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     image = Base64ImageField()
     cooking_time = serializers.IntegerField(
-        min_value=1, error_messages={'min_value': 'At least 1 minute'})
+        min_value=MIN_VALUE,
+        max_value=MAX_VALUE,
+        error_messages={
+            'min_value': f'At least {MIN_VALUE} minute',
+            'max_value': f'Maximum {MAX_VALUE} minutes'})
     ingredients = AddIngredientAmountSerializer(many=True, write_only=True)
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True)
@@ -253,12 +259,6 @@ class RecipeSerializer(serializers.ModelSerializer):
                   'cooking_time')
 
     def validate(self, data):
-        cooking_time = data.get('cooking_time')
-        if int(cooking_time) <= 0:
-            raise serializers.ValidationError(
-                details='Cooking time must be more than 0 min',
-                code=status.HTTP_400_BAD_REQUEST)
-
         ingredients = data.get('ingredients')
         if not ingredients:
             raise serializers.ValidationError(

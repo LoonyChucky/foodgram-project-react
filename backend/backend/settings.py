@@ -6,12 +6,11 @@ load_dotenv(find_dotenv())
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SECRET_KEY = 'django-insecure-dj)wl18#^7bx704)*$grvg7!-ia*elm)*+4&d)-zem(smrx6$6'
+SECRET_KEY = os.getenv('SECRET_KEY', default='my_secret_key')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG', default='False').lower() == 'true'
 
-# ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '130.193.52.225', 'https://kirfoodgram.servebeer.com', 'kirfoodgram.servebeer.com']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='127.0.0.1, localhost').split(' ')
 
 AUTH_USER_MODEL = 'users.User'
 

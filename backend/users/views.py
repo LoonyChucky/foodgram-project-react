@@ -6,7 +6,7 @@ from rest_framework.permissions import (IsAuthenticated,
 from rest_framework.response import Response
 
 from api.serializers import CreateSubscribtionSerializer, SubscriberSerializer
-from users.models import Subscription, User
+from users.models import User
 from utils.paginations import MyPagination
 
 
@@ -46,8 +46,8 @@ class CustomUserViewSet(UserViewSet):
             return Response({'error': 'no such author'},
                             status=status.HTTP_404_NOT_FOUND)
 
-        subscription = Subscription.objects.filter(
-            user=request.user, author=id)
+        subscription = self.request.user.followed_users.filter(author=id)
+
         if subscription.exists():
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

@@ -9,8 +9,8 @@ from rest_framework.response import Response
 from api.serializers import (FavoriteSerializer, IngredientSerializer,
                              RecipeListSerializer, RecipeSerializer,
                              ShoppingCartSerializer, TagSerializer)
-from recipes.models import (Favorite, Ingredient, IngredientAmount, Recipe,
-                            ShoppingCart, Tag)
+from recipes.models import (Ingredient, IngredientAmount, Recipe, ShoppingCart,
+                            Tag)
 from utils.filters import IngredientFilter, RecipeFilter
 from utils.paginations import MyPagination
 from utils.permissions import IsAuthorOrReadOnly
@@ -78,7 +78,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             detail=False,
             permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request):
-        shopping_cart = ShoppingCart.objects.filter(user=self.request.user)
+        shopping_cart = self.request.user.recipes_shoppingcart_related.all()
         recipes = [item.recipe.id for item in shopping_cart]
         shopping_list = IngredientAmount.objects.filter(
             recipe__in=recipes).values('ingredient').annotate(
@@ -117,8 +117,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response({'error': 'no such recipe'},
                             status=status.HTTP_404_NOT_FOUND)
 
-        instance = Favorite.objects.filter(
-            user=request.user, recipe_id=pk)
+        instance = request.user.recipes_favorite_related.filter(recipe=pk)
+
         if instance.exists():
             instance.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

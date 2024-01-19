@@ -4,6 +4,9 @@ from django.db import models
 
 from users.models import User
 
+MIN_VALUE = 1
+MAX_VALUE = 32000
+
 
 class Tag(models.Model):
 
@@ -109,10 +112,10 @@ class Recipe(models.Model):
     cooking_time = models.PositiveSmallIntegerField(
         'Cooking time',
         validators=[
-            MinValueValidator(limit_value=1,
-                              message='At least 1 minute!'),
-            MaxValueValidator(limit_value=10080,
-                              message='No more than 1 week!'),
+            MinValueValidator(limit_value=MIN_VALUE,
+                              message=f'At least {MIN_VALUE} minute!'),
+            MaxValueValidator(limit_value=MAX_VALUE,
+                              message=f'No more than {MAX_VALUE} minutes!'),
         ],
     )
 
@@ -135,22 +138,23 @@ class IngredientAmount(models.Model):
 
     recipe = models.ForeignKey(
         Recipe,
-        related_name='recipe_ingredient',
         on_delete=models.CASCADE,
         verbose_name='Recipe',
+        related_name='recipe_ingredient',
     )
 
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
         verbose_name='Ingredient',
+        related_name='recipe_ingredient',
     )
 
     amount = models.PositiveSmallIntegerField(
         'Ingredient amount',
         validators=(
-            MinValueValidator(1, 'Minimum 1 unit'),
-            MaxValueValidator(10000, 'Max 10 000 units'),
+            MinValueValidator(MIN_VALUE, f'Minimum {MIN_VALUE} unit'),
+            MaxValueValidator(MAX_VALUE, f'Max {MAX_VALUE} units'),
         ),
     )
 
@@ -170,14 +174,14 @@ class Favorite(models.Model):
         User,
         verbose_name='User',
         on_delete=models.CASCADE,
-        related_name='%(app_label)s_%(class)s_related',
+        related_name='recipes_favorite_related',
     )
 
     recipe = models.ForeignKey(
         Recipe,
         verbose_name='Recipe',
         on_delete=models.CASCADE,
-        related_name='%(app_label)s_%(class)s_related',
+        related_name='recipes_favorite_related',
     )
 
     date_added = models.DateTimeField(
@@ -187,6 +191,7 @@ class Favorite(models.Model):
     )
 
     class Meta:
+        ordering = ('-date_added',)
         verbose_name = 'Favorite recipe'
         verbose_name_plural = 'Favorite recipes'
         constraints = (
@@ -207,17 +212,18 @@ class ShoppingCart(models.Model):
         User,
         verbose_name='User',
         on_delete=models.CASCADE,
-        related_name='%(app_label)s_%(class)s_related',
+        related_name='recipes_shoppingcart_related',
     )
 
     recipe = models.ForeignKey(
         Recipe,
         verbose_name='Recipe',
         on_delete=models.CASCADE,
-        related_name='%(app_label)s_%(class)s_related',
+        related_name='recipes_shoppingcart_related',
     )
 
     class Meta:
+        ordering = ('-id',)
         verbose_name = 'Recipe in shopping cart'
         verbose_name_plural = 'Recipes in shopping cart'
         constraints = (
