@@ -9,10 +9,9 @@ from rest_framework.response import Response
 from api.serializers import (FavoriteSerializer, IngredientSerializer,
                              RecipeListSerializer, RecipeSerializer,
                              ShoppingCartSerializer, TagSerializer)
-from recipes.models import (Ingredient, IngredientAmount, Recipe, ShoppingCart,
-                            Tag)
+from recipes.models import Ingredient, IngredientAmount, Recipe, Tag
 from utils.filters import IngredientFilter, RecipeFilter
-from utils.paginations import MyPagination
+from utils.paginations import CustomPagination
 from utils.permissions import IsAuthorOrReadOnly
 
 
@@ -37,7 +36,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.select_related('author').prefetch_related(
         'tags', 'ingredients')
     permission_classes = (IsAuthorOrReadOnly,)
-    pagination_class = MyPagination
+    pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
@@ -65,8 +64,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response({'error': 'no such recipe'},
                             status=status.HTTP_404_NOT_FOUND)
 
-        instance = ShoppingCart.objects.filter(
-            user=request.user, recipe_id=pk)
+        instance = request.user.recipes_shoppingcart_related.filter(
+            recipe_id=pk)
         if instance.exists():
             instance.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

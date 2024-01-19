@@ -7,14 +7,14 @@ from rest_framework.response import Response
 
 from api.serializers import CreateSubscribtionSerializer, SubscriberSerializer
 from users.models import User
-from utils.paginations import MyPagination
+from utils.paginations import CustomPagination
 
 
 class CustomUserViewSet(UserViewSet):
 
     queryset = User.objects.all()
     permission_classes = (IsAuthenticatedOrReadOnly,)
-    pagination_class = MyPagination
+    pagination_class = CustomPagination
 
     def get_permissions(self):
         if self.action == 'me':

@@ -8,6 +8,7 @@ class IngredientInlineAdmin(admin.StackedInline):
 
     model = IngredientAmount
     autocomplete_fields = ('ingredient',)
+    min_num = 1
 
 
 @admin.register(IngredientAmount)
